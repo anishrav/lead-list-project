@@ -36,7 +36,7 @@ def get_db():
 def create_lead(lead: schemas.LeadCreate, db: Session = Depends(get_db)):
     db_lead = crud.get_lead(db, lead_id=lead.id)
     if db_lead:
-        raise HTTPException(status_code=400, detail="Task already in database")
+        raise HTTPException(status_code=400, detail="Lead already in database")
     return crud.create_lead(db=db, lead=lead)
 
 
@@ -50,7 +50,7 @@ def read_leads(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
 def read_lead(lead_id: str, db: Session = Depends(get_db)):
     db_lead = crud.get_lead(db, lead_id=lead_id)
     if db_lead is None:
-        raise HTTPException(status_code=404, detail="lead not found")
+        raise HTTPException(status_code=404, detail="Lead not found")
     return db_lead
 
 
@@ -58,6 +58,6 @@ def read_lead(lead_id: str, db: Session = Depends(get_db)):
 def delete_lead(lead_id: str, db: Session = Depends(get_db)):
     db_lead = crud.get_lead(db, lead_id=lead_id)
     if db_lead is None:
-        raise HTTPException(status_code=404, detail="lead not found")
+        raise HTTPException(status_code=404, detail="Lead not found")
     crud.delete_lead(db, db_lead)
     return "Successfully deleted lead with id: " + lead_id
