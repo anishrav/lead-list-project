@@ -1,8 +1,9 @@
 {
-  "name": "learn-react-in-x-minutes",
+  "name": "lead-list-project",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@material-ui/core": "^4.11.4",
     "react": "^16.10.2",
     "react-dom": "^16.10.2",
     "react-scripts": "3.2.0",
