@@ -1,51 +1,115 @@
 import React, { useState, useRef, useEffect } from 'react';
-import TodoList from './TodoList'
-import uuidv4 from 'uuid/v4'
+import uuidv4 from 'uuid/v4';
+import { Button,  TextField, TableCell, TableContainer, TableHead, TableRow } from '@material-ui/core';
+import LeadList from './LeadList';
 
-const LOCAL_STORAGE_KEY = 'todoApp.todos'
+const API_URL = 'http://127.0.0.1:8000'
 
 function App() {
-  const [todos, setTodos] = useState([])
-  const todoNameRef = useRef()
+  const [leads, setLeads] = useState([])
+  const leadNameRef = useRef()
+  const leadEmailRef = useRef()
+  const leadPhoneRef = useRef()
+
+  async function fetchData() {
+    try {
+      const res = await fetch(`${API_URL}/leads/`, {
+        headers: new Headers({
+          'Accept': 'application/json'
+        })
+      });
+      const leads = await res.json();
+
+      if (leads) {
+        setLeads(leads)
+      }
+    } catch(e) {
+      console.log(e);
+    }
+  }
 
   useEffect(() => {
-    const storedTodos = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY))
-    if (storedTodos) setTodos(storedTodos)
+    fetchData();
   }, [])
 
-  useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(todos))
-  }, [todos])
+  async function handleAddLead(e) {
+    const name = leadNameRef.current.value;
+    const email = leadEmailRef.current.value;
+    const phone = leadPhoneRef.current.value;
 
-  function toggleTodo(id) {
-    const newTodos = [...todos]
-    const todo = newTodos.find(todo => todo.id === id)
-    todo.complete = !todo.complete
-    setTodos(newTodos)
+    if (name === '') {
+      return;
+    }
+    
+    try {
+      const res = await fetch(`${API_URL}/leads/`, {
+        method: 'POST',
+        body: JSON.stringify({
+          id: uuidv4(),
+          name: name, 
+          email: email,
+          phone: phone,
+        }),
+      });
+      
+      if (res.status === 200) {
+        await fetchData();
+      } else {
+        throw Error(res.statusText);
+      }
+    } catch (e) {
+      console.log(e);
+    }
+
+    leadNameRef.current.value = null;
+    leadEmailRef.current.value = null;
+    leadPhoneRef.current.value = null;
   }
 
-  function handleAddTodo(e) {
-    const name = todoNameRef.current.value
-    if (name === '') return
-    setTodos(prevTodos => {
-      return [...prevTodos, { id: uuidv4(), name: name, complete: false}]
-    })
-    todoNameRef.current.value = null
-  }
-
-  function handleClearTodos() {
-    const newTodos = todos.filter(todo => !todo.complete)
-    setTodos(newTodos)
+  async function handleDeleteLead(deleteLead) {
+    try {
+      const res = await fetch(`${API_URL}/leads/${deleteLead.id}/`, {
+        method: 'DELETE',
+      });
+      
+      if (res.status === 200) {
+        await fetchData();
+      } else {
+        // error only thrown if ID doesn't exist in db
+        // DELETE requests are only fired for IDs that do exist in db, so this is just for safety
+        throw Error(res.statusText); 
+      }
+    } catch (e) {
+      console.log(e);
+    }
   }
 
   return (
-    <>
-      <TodoList todos={todos} toggleTodo={toggleTodo} />
-      <input ref={todoNameRef} type="text" />
-      <button onClick={handleAddTodo}>Add Todo</button>
-      <button onClick={handleClearTodos}>Clear Complete</button>
-      <div>{todos.filter(todo => !todo.complete).length} left to do</div>
-    </>
+    <TableContainer>
+      <TableHead>
+        <TableRow>
+          <TableCell>Name/Visitor ID</TableCell>
+          <TableCell>Email</TableCell>
+          <TableCell>Phone Number</TableCell>
+          <TableCell></TableCell>
+        </TableRow>
+      </TableHead>
+      <LeadList leads={leads} deleteLead={handleDeleteLead} />
+      <TableRow>
+        <TableCell>
+          <TextField inputRef={leadNameRef} type="text" />
+        </TableCell>
+        <TableCell>
+          <TextField inputRef={leadEmailRef} type="text" />
+        </TableCell>
+        <TableCell>
+          <TextField inputRef={leadPhoneRef} type="text" />
+        </TableCell>
+        <TableCell>
+          <Button onClick={handleAddLead}> + Add Lead </Button>
+        </TableCell>
+      </TableRow>
+    </TableContainer>
   )
 }
 
