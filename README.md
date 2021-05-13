@@ -8,5 +8,7 @@ npm start
 ```
 
 If you open two windows, run these in separate windows:
+
 `uvicorn api.main:app --reload &`
+
 `npm start`
